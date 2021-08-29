@@ -6,6 +6,8 @@ from discord_slash.utils.manage_commands import create_option, create_permission
 
 from discord.ext import commands
 from dotenv import load_dotenv
+import datetime
+from scheduledMessageCog import scheduledMessage
 
 
 load_dotenv()
@@ -20,7 +22,10 @@ TOKEN = os.getenv("BOT_TOKEN")
 
 @bot.event
 async def on_ready():
-	print("Ready")		
+	print("Ready")	
+
+	bot.add_cog(scheduledMessage(bot))
+
 
 @bot.event
 async def on_message(msg):
@@ -48,11 +53,12 @@ async def on_message(msg):
 			})
 async def reply(context, message):
 	if not isModMailChannel(context.channel):
+		await context.send("Not a Modmail channel")
 		return
 
 	user = bot.get_user(int(context.channel.topic))
 
-	embed = createModMailEmbed(message, bot.user)
+	embed = createReplyEmbed(message, bot.user)
 	await user.send(embed = embed)
 	await context.send(content = "Sent this to the user", embed = embed)
 
@@ -74,6 +80,7 @@ async def reply(context, message):
 			})
 async def close(context, message = None):
 	if not isModMailChannel(context.channel):
+		await context.send("Not a Modmail channel")
 		return
 
 	if not message:
@@ -81,15 +88,47 @@ async def close(context, message = None):
 
 	user = bot.get_user(int(context.channel.topic))
 
-	embed = createModMailEmbed(message, bot.user)
+	embed = createReplyEmbed(message, bot.user)
 	await user.send(embed = embed)
 
+	await context.send("Closed!")
 
-moderatorPermissions = {
-	serverID : [
-		create_permission(int(os.getenv("MODERATOR_ROLE_ID")), SlashCommandPermissionType.ROLE, True)
-	]
-}
+	await context.channel.delete()
+
+@slash.slash(name = "notes", 
+			description = "Gets existing notes on given user", 
+			guild_ids = [serverID],
+			options = [
+				create_option(
+					name        = "user",
+					description = "User of whom to fetch notes",
+					option_type = 6,
+					required    = True
+				),
+				create_option(
+					name        = "note",
+					description = "Note to add to this user. Leave empty if you are just fetching existing notes.",
+					option_type = 3,
+					required    = False
+				)
+			],
+			permissions = {
+				serverID : [
+					create_permission(int(os.getenv("MODERATOR_ROLE_ID")), SlashCommandPermissionType.ROLE, True)
+				]
+			})
+async def notes(context, user = None, note = None):
+	if(note):
+		if(currentNote := await getUserNote(user)):
+			channel = currentNote.channel
+			content = currentNote.content
+			await currentNote.delete()
+			await channel.send(content + "\n- " + note + f' | {context.author.display_name} - {datetime.date.today()}')
+
+	if(note := await getUserNote(user)):
+		await context.send(note.jump_url)
+	else:
+		await context.send("There are no notes on that user at the moment.")
 	
 def isModMailChannel(channel):
 	return channel.category.id == int(os.getenv("MODMAIL_CATEGORY_ID"))
@@ -107,6 +146,19 @@ async def createNewModMailChannel(userID):
 
 	return channel
 
+def getAllNotes():
+	channelID = int(os.getenv("MOD_NOTES_CHANNEL_ID"))
+	channel = bot.get_channel(channelID)
+
+	return channel.history()
+
+async def getUserNote(user):
+	async for note in getAllNotes():
+		if(user == note.mentions[0]):
+			return note
+
+	return None
+
 def createModMailEmbed(content, user):
 	embed = discord.Embed(
 		description = content, 
@@ -119,6 +171,20 @@ def createModMailEmbed(content, user):
 	)
 
 	return embed
+
+def createReplyEmbed(content, user):
+	embed = discord.Embed(
+		description = content, 
+		color       = discord.Color.blue()
+	)
+
+	embed.set_author(
+		name     = "DesignDive Mod Mail",
+		icon_url = user.avatar_url
+	)
+
+	return embed
+	
 	
 def isDMChannel(channel):
 	return isinstance(channel, discord.channel.DMChannel)

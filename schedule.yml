@@ -1,0 +1,49 @@
+recurring:
+  daily:
+  # These should be in the format of 
+  # HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
+  weekly:
+  # These should be in the format of 
+  # WeekDay:
+  #  HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
+    Monday:
+      14-53-00:
+        channel: 880989662238367744
+        message: "@everyone test weekly message"
+      04-21-00:
+        channel: 880989662238367744
+        message: "@everyone test weekly message"
+    Friday:
+      14-53-00:
+        channel: 880989662238367744
+        message: "@everyone test weekly message"
+  monthly:
+  # These should be in the format of 
+  # MM:
+  #   HH-MM-SS:
+  #     channel: channelID
+  #     message: "Whatever message you'd like to send"
+    1:
+      14-52-00:
+        channel: 880989662238367744
+        message: "@everyone test monthly message"
+    30:
+      04-22-00:
+        channel: 880989662238367744
+        message: "@everyone test monthly message"
+oneoff:
+  # These should be in the format of 
+  # DD/MM/YY HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
+  30/08/2021 04-23-00:
+    channel: 880989662238367744
+    message: "@everyone test oneoff message"
+  30/09/2021 14-55-00:
+    channel: 880989662238367744
+    message: "@everyone test oneoff second message"
+
