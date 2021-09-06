@@ -52,7 +52,7 @@ async def reply(context, message):
 
 	user = bot.get_user(int(context.channel.topic))
 
-	embed = createModMailEmbed(message, bot.user)
+	embed = createReplyEmbed(message, bot.user)
 	await user.send(embed = embed)
 	await context.send(content = "Sent this to the user", embed = embed)
 
@@ -81,15 +81,12 @@ async def close(context, message = None):
 
 	user = bot.get_user(int(context.channel.topic))
 
-	embed = createModMailEmbed(message, bot.user)
+	embed = createReplyEmbed(message, bot.user)
 	await user.send(embed = embed)
 
+	await context.send("Closed!")
 
-moderatorPermissions = {
-	serverID : [
-		create_permission(int(os.getenv("MODERATOR_ROLE_ID")), SlashCommandPermissionType.ROLE, True)
-	]
-}
+	await context.channel.delete()
 	
 def isModMailChannel(channel):
 	return channel.category.id == int(os.getenv("MODMAIL_CATEGORY_ID"))
@@ -119,6 +116,20 @@ def createModMailEmbed(content, user):
 	)
 
 	return embed
+
+def createReplyEmbed(content, user):
+	embed = discord.Embed(
+		description = content, 
+		color       = discord.Color.blue()
+	)
+
+	embed.set_author(
+		name     = "DesignDive Mod Mail",
+		icon_url = user.avatar_url
+	)
+
+	return embed
+	
 	
 def isDMChannel(channel):
 	return isinstance(channel, discord.channel.DMChannel)
