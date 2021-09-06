@@ -1,0 +1,23 @@
+recurring:
+  daily:
+  # These should be in the format of 
+  # HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
+  weekly:
+  # These should be in the format of 
+  # WeekDay:
+  #  HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
+  monthly:
+  # These should be in the format of 
+  # MM:
+  #   HH-MM-SS:
+  #     channel: channelID
+  #     message: "Whatever message you'd like to send"
+oneoff:
+  # These should be in the format of 
+  # DD/MM/YY HH-MM-SS:
+  #   channel: channelID
+  #   message: "Whatever message you'd like to send"
