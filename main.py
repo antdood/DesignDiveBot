@@ -124,6 +124,9 @@ async def notes(context, user = None, note = None):
 			content = currentNote.content
 			await currentNote.delete()
 			await channel.send(content + "\n- " + note + f' | {context.author.display_name} - {datetime.date.today()}')
+		else:
+			channel = getModNotesChannel()
+			await channel.send(user.mention + "\n- " + note + f' | {context.author.display_name} - {datetime.date.today()}')
 
 	if(note := await getUserNote(user)):
 		await context.send(note.jump_url)
@@ -197,6 +200,9 @@ def getUserModMailChannel(userID):
 
 def getModMailCategoryChannel():
 	return discord.utils.get(bot.get_all_channels(), id = int(os.getenv("MODMAIL_CATEGORY_ID")))
+
+def getModNotesChannel():
+	return discord.utils.get(bot.get_all_channels(), id = int(os.getenv("MOD_NOTES_CHANNEL_ID")))
 
 def getUserNickInServer(userID):	
 	return getServer().get_member(userID).display_name
