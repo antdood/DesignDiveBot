@@ -30,8 +30,7 @@ async def on_ready():
 @bot.event
 async def on_message(msg):
 	if isDMChannel(msg.channel) and not msg.author.bot:
-		authorID = msg.author.id 
-		channel = getUserModMailChannel(authorID) or await createNewModMailChannel(authorID)
+		channel = getUserModMailChannel(msg.author) or await createNewModMailChannel(msg.author)
 
 		await channel.send(embed = createModMailEmbed(msg.content, msg.author))
 
@@ -135,16 +134,16 @@ async def notes(context, user = None, note = None):
 def isModMailChannel(channel):
 	return channel.category.id == int(os.getenv("MODMAIL_CATEGORY_ID"))
 
-async def createNewModMailChannel(userID):
+async def createNewModMailChannel(user):
 	channel = await getServer().create_text_channel(
-		name     = getUserNickInServer(userID),
+		name     = getUserNickInServer(user.id),
 		category = getModMailCategoryChannel(),
-		topic    = userID
+		topic    = user.id
 	)
 
 	modRole = getServer().get_role(int(os.getenv("MODERATOR_ROLE_ID")))
 
-	await channel.send(f"New Modmail! {modRole.mention}")
+	await channel.send(f"Hey {modRole.mention}, new Modmail from {user.mention}!")
 
 	return channel
 
@@ -194,8 +193,8 @@ def isDMChannel(channel):
 def getServer():
 	return bot.get_guild(serverID)
 
-def getUserModMailChannel(userID):
-	return discord.utils.get(getServer().text_channels, topic = f'{userID}') 
+def getUserModMailChannel(user):
+	return discord.utils.get(getServer().text_channels, topic = f'{user.id}') 
 
 def getModMailCategoryChannel():
 	return discord.utils.get(bot.get_all_channels(), id = int(os.getenv("MODMAIL_CATEGORY_ID")))

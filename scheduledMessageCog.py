@@ -1,5 +1,6 @@
 from discord.ext import tasks, commands
 from asyncio import sleep
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -22,9 +23,10 @@ class scheduledMessage(commands.Cog):
         time, messageData = getNextSchedule()
         print("Scheduled Message")
         print(time)
+        print(f'{getSecondsUntilSchedule(time)} seconds from now.')
         print(messageData)
         
-        await sleep(getSecondsUntilSchedule(time))
+        await sleep(getSecondsUntilSchedule(time) + 5)
         await self.bot.get_channel(messageData["channel"]).send(messageData["message"])
         print("Sent Message")
         print(time)
@@ -44,11 +46,11 @@ def getFormattedSchedule():
     return {**formatOneoff(rawSchedule), **formatRecurring(rawSchedule)}
 
 def formatOneoff(rawSchedule):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("America/New_York"))
     out = {}
 
     for time, scheduleData in getItemsOrNone(rawSchedule["oneoff"]):
-        date = datetime.strptime(time, "%d/%m/%Y %H-%M-%S")
+        date = datetime.strptime(time, "%d/%m/%Y %H-%M-%S").replace(tzinfo=ZoneInfo("America/New_York"))
         if (date > now):
             out[date] = scheduleData
     
@@ -58,12 +60,12 @@ def formatRecurring(rawSchedule):
     return {**formatDaily(rawSchedule), **formatWeekly(rawSchedule), **formatMonthly(rawSchedule)}
 
 def formatDaily(rawSchedule):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("America/New_York"))
 
     out = {}
 
     for time, scheduleData in getItemsOrNone(rawSchedule["recurring"]["daily"]):
-        nextSchedule = datetime(now.year, now.month, now.day, *getTimesFromString(time))
+        nextSchedule = datetime(now.year, now.month, now.day, *getTimesFromString(time)).replace(tzinfo=ZoneInfo("America/New_York"))
         if (nextSchedule < now):
             nextSchedule += timedelta(days = 1)
 
@@ -72,13 +74,13 @@ def formatDaily(rawSchedule):
     return out
 
 def formatWeekly(rawSchedule):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("America/New_York"))
 
     out = {}  
 
     # tried to do dict comprehension for this but I didn't even get close before I gave up
     for day, schedules in getItemsOrNone(rawSchedule["recurring"]["weekly"]):
-        date = datetime(now.year, now.month, now.day) + timedelta(days = daysUntilWeekday(now, day))
+        date = datetime(now.year, now.month, now.day).replace(tzinfo=ZoneInfo("America/New_York")) + timedelta(days = daysUntilWeekday(now, day))
         for time, scheduleData in getItemsOrNone(schedules):
             hours, minutes, seconds = getTimesFromString(time)
             nextSchedule = date.replace(hour = hours, minute = minutes, second = seconds)
@@ -91,12 +93,12 @@ def formatWeekly(rawSchedule):
     return out
 
 def formatMonthly(rawSchedule):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("America/New_York"))
 
     out = {}
 
     for date, schedules in getItemsOrNone(rawSchedule["recurring"]["monthly"]):
-        date = datetime(now.year, now.month, date)
+        date = datetime(now.year, now.month, date).replace(tzinfo=ZoneInfo("America/New_York"))
         for time, scheduleData in getItemsOrNone(schedules):
             hours, minutes, seconds = getTimesFromString(time)
             nextSchedule = date.replace(hour = hours, minute = minutes, second = seconds)
@@ -138,7 +140,7 @@ def getNextSchedule():
     return min(getItemsOrNone(getFormattedSchedule()), key = lambda schedule : schedule[0])
 
 def getSecondsUntilSchedule(time):
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("America/New_York"))
 
     return (time - now).total_seconds()
     
